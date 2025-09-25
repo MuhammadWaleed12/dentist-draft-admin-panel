@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseClient } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Shield } from "lucide-react";
@@ -16,41 +15,32 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createSupabaseClient();
 
   useEffect(() => {
     const checkAdminAuth = async () => {
       try {
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        console.log('🔍 Checking admin authentication...');
 
-        if (authError || !user) {
+        // Check if user is authenticated by making a request to admin API
+        const response = await fetch('/api/admin/auth/check', {
+          method: 'GET',
+          credentials: 'include',
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          console.log('❌ Admin auth check failed:', data.error);
           router.push("/admin/login");
           return;
         }
 
-        // Check if user is admin
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role, is_verified')
-          .eq('user_id', user.id)
-          .maybeSingle();
-
-        if (profileError || !profile) {
-          console.error("Profile error:", profileError);
-          setError("User profile not found");
-          return;
-        }
-
-        if (profile.role !== 'admin') {
+        if (!data.isAdmin) {
           setError("Access denied. Admin privileges required.");
           return;
         }
 
-        if (!profile.is_verified) {
-          setError("Admin account not verified. Contact system administrator.");
-          return;
-        }
-
+        console.log('✅ Admin authentication verified');
         setIsAdmin(true);
       } catch (error) {
         console.error("Admin auth check error:", error);
@@ -61,7 +51,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
     };
 
     checkAdminAuth();
-  }, [router, supabase]);
+  }, [router]);
 
   if (loading) {
     return (

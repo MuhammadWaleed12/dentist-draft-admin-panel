@@ -27,25 +27,22 @@ import {
   Calendar,
   TrendingUp,
   Search,
-  Filter,
-  MoreHorizontal,
-  CheckCircle,
-  XCircle,
   Clock,
   Trash2,
   Eye,
   RefreshCw,
-  Download,
   UserCheck,
   MapPin,
   Phone,
   Mail,
   Globe,
-  Star
+  Star,
+  CheckCircle,
+  XCircle,
+  LogOut
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { createSupabaseClient } from "@/lib/supabase";
 
 interface DashboardStats {
   totalProviders: number;
@@ -102,7 +99,6 @@ export function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const router = useRouter();
-  const supabase = createSupabaseClient();
 
   // Load dashboard data
   useEffect(() => {
@@ -127,27 +123,24 @@ export function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      // Load providers count
-      const { count: providersCount } = await supabase
-        .from('providers')
-        .select('*', { count: 'exact', head: true });
+      // Load basic stats from API endpoints
+      const [bookingsRes, providersRes] = await Promise.all([
+        fetch('/api/admin/bookings'),
+        fetch('/api/admin/providers')
+      ]);
 
-      // Load bookings count
-      const { count: bookingsCount } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true });
+      const bookingsData = await bookingsRes.json();
+      const providersData = await providersRes.json();
 
-      // Load pending bookings count
-      const { count: pendingCount } = await supabase
-        .from('bookings')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+      const totalBookings = bookingsData.bookings?.length || 0;
+      const pendingBookings = bookingsData.bookings?.filter((b: Booking) => b.status === 'pending').length || 0;
+      const totalProviders = providersData.providers?.length || 0;
 
       setStats({
-        totalProviders: providersCount || 0,
-        totalBookings: bookingsCount || 0,
-        pendingBookings: pendingCount || 0,
-        verifiedProviders: providersCount || 0 // Assuming all providers are verified for now
+        totalProviders,
+        totalBookings,
+        pendingBookings,
+        verifiedProviders: totalProviders // Assuming all providers are verified
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -219,6 +212,9 @@ export function AdminDashboard() {
       ));
 
       toast.success('Booking status updated successfully');
+      
+      // Reload stats to reflect changes
+      loadStats();
     } catch (error) {
       console.error('Error updating booking status:', error);
       toast.error('Failed to update booking status');
@@ -244,6 +240,9 @@ export function AdminDashboard() {
       // Update local state
       setProviders(providers.filter(provider => provider.id !== providerId));
       toast.success('Provider deleted successfully');
+      
+      // Reload stats
+      loadStats();
     } catch (error) {
       console.error('Error deleting provider:', error);
       toast.error('Failed to delete provider');
@@ -252,7 +251,11 @@ export function AdminDashboard() {
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+      // Clear any local storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Redirect to login
       router.push('/admin/login');
       toast.success('Signed out successfully');
     } catch (error) {
@@ -325,8 +328,9 @@ export function AdminDashboard() {
               <Button
                 variant="outline"
                 onClick={handleSignOut}
-                className="text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 flex items-center gap-2"
               >
+                <LogOut className="w-4 h-4" />
                 Sign Out
               </Button>
             </div>

@@ -11,77 +11,63 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Mail, Lock, Shield } from "lucide-react";
+import { Mail, Lock, Shield, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
-import { createSupabaseClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 
 export function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createSupabaseClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
     if (!email || !password) {
-      toast.error("Please fill in all fields");
+      setError("Please fill in all fields");
       return;
     }
 
     if (!email.includes('@')) {
-      toast.error("Please enter a valid email address");
+      setError("Please enter a valid email address");
       return;
     }
 
     setLoading(true);
 
     try {
-      // Sign in with email and password
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      console.log('🔐 Admin login attempt for:', email);
+
+      // Make API call to admin login endpoint
+      const response = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
-      if (error) {
-        console.error("Login error:", error);
-        throw error;
+      const data = await response.json();
+
+      if (!response.ok || data.error) {
+        throw new Error(data.error || 'Login failed');
       }
 
-      if (!data.user) {
-        throw new Error("No user data returned");
-      }
-
-      // Check if user is admin
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role, is_verified')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
-
-      if (profileError || !profile) {
-        console.error("Profile error:", profileError);
-        throw new Error("User profile not found");
-      }
-
-      if (profile.role !== 'admin') {
-        await supabase.auth.signOut();
-        throw new Error("Access denied. Admin privileges required.");
-      }
-
-      if (!profile.is_verified) {
-        await supabase.auth.signOut();
-        throw new Error("Admin account not verified. Contact system administrator.");
-      }
-
+      console.log('✅ Admin login successful');
       toast.success("Welcome to the admin panel!");
       router.push("/admin");
 
     } catch (error) {
       console.error("Admin login error:", error);
-      toast.error(error instanceof Error ? error.message : "Login failed");
+      const errorMessage = error instanceof Error ? error.message : "Login failed";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -116,6 +102,19 @@ export function AdminLoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-red-800">
+                    <p className="font-medium mb-1">Login Failed</p>
+                    <p>{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>

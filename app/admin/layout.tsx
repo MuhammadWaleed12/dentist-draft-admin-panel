@@ -7,7 +7,9 @@ export default function AdminLayout({
 }) {
   return (
     <AdminAuthGuard>
-      {children}
+      <div className="min-h-screen bg-slate-50">
+        {children}
+      </div>
     </AdminAuthGuard>
   );
 }
