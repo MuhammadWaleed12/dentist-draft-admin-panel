@@ -1,13 +1,14 @@
 // app/api/admin/providers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/get-supabase-admin';
-import { adminAuth } from '@/lib/admin-auth';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 export async function GET(request: NextRequest) {
   try {
-    // Check admin authentication
-    const adminUser = await adminAuth.getCurrentAdminUser();
-    if (!adminUser) {
+    // Check admin authentication via server-side cookie session
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 401 }

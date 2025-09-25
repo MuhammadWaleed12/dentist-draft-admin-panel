@@ -1,10 +1,10 @@
 // app/api/admin/auth/check/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseClient } from '@/lib/supabase';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSupabaseClient();
+    const supabase = createSupabaseServerClient();
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -16,23 +16,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, is_verified, full_name')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    // Enforce single admin email if configured
+    const allowedAdminEmail = process.env.ADMIN_EMAIL;
 
-    if (profileError || !profile) {
-      return NextResponse.json(
-        { isAdmin: false, error: 'User profile not found' },
-        { status: 404 }
-      );
-    }
+    // No profiles checks. Enforce by ADMIN_EMAIL only if set
 
-    if (profile.role !== 'admin' || !profile.is_verified) {
+    if (allowedAdminEmail && user.email?.toLowerCase() !== allowedAdminEmail.toLowerCase()) {
       return NextResponse.json(
-        { isAdmin: false, error: 'Admin privileges required' },
+        { isAdmin: false, error: 'Access denied. Invalid admin account' },
         { status: 403 }
       );
     }
@@ -42,8 +33,8 @@ export async function GET(request: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        full_name: profile.full_name,
-        role: profile.role
+        full_name: user.user_metadata?.full_name || null,
+        role: 'admin'
       }
     });
 

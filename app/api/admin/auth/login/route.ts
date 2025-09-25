@@ -1,6 +1,6 @@
 // app/api/admin/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseClient } from '@/lib/supabase';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,9 +13,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createSupabaseClient();
+    // Enforce single admin email if configured
+    const allowedAdminEmail = process.env.ADMIN_EMAIL;
+    if (allowedAdminEmail && email.toLowerCase() !== allowedAdminEmail.toLowerCase()) {
+      return NextResponse.json(
+        { error: 'Access denied. Invalid admin account.' },
+        { status: 403 }
+      );
+    }
 
-    // Sign in with email and password
+    const supabase = createSupabaseServerClient();
+
+    // Sign in with email and password (sets cookies via server client)
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -36,45 +45,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is admin
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role, is_verified, full_name')
-      .eq('user_id', data.user.id)
-      .maybeSingle();
-
-    if (profileError || !profile) {
-      console.error('Profile error:', profileError);
-      await supabase.auth.signOut();
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      );
-    }
-
-    if (profile.role !== 'admin') {
-      await supabase.auth.signOut();
-      return NextResponse.json(
-        { error: 'Access denied. Admin privileges required.' },
-        { status: 403 }
-      );
-    }
-
-    if (!profile.is_verified) {
-      await supabase.auth.signOut();
-      return NextResponse.json(
-        { error: 'Admin account not verified. Contact system administrator.' },
-        { status: 403 }
-      );
-    }
+    // No profiles table checks; authentication is purely by Supabase user and ADMIN_EMAIL
 
     return NextResponse.json({
       success: true,
       user: {
         id: data.user.id,
         email: data.user.email,
-        full_name: profile.full_name,
-        role: profile.role
       },
       message: 'Login successful'
     });

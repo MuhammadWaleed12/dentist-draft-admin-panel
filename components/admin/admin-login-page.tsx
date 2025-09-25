@@ -51,6 +51,7 @@ export function AdminLoginPage() {
           email,
           password,
         }),
+        credentials: 'include',
       });
 
       const data = await response.json();

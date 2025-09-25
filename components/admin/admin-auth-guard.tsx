@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Shield } from "lucide-react";
@@ -15,11 +15,19 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const checkAdminAuth = async () => {
       try {
         console.log('🔍 Checking admin authentication...');
+
+        // Skip guard on the admin login page and render children
+        if (pathname === '/admin/login') {
+          setLoading(false);
+          setIsAdmin(false);
+          return;
+        }
 
         // Check if user is authenticated by making a request to admin API
         const response = await fetch('/api/admin/auth/check', {
@@ -114,7 +122,11 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
     );
   }
 
+  // Allow login page to render even if not admin
   if (!isAdmin) {
+    if (pathname === '/admin/login') {
+      return <>{children}</>;
+    }
     return null;
   }
 
