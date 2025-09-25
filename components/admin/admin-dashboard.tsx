@@ -14,11 +14,9 @@ import {
   LogOut,
   RefreshCw,
   Eye,
-  Edit,
   Trash2,
   CheckCircle,
   XCircle,
-  Clock,
   Mail,
   Phone,
   MapPin,
@@ -26,7 +24,6 @@ import {
   Globe,
   User
 } from "lucide-react";
-import LogoIcon from "@/assets/Icons/LogoIcon";
 import { toast } from "sonner";
 
 interface AdminUser {
@@ -365,13 +362,6 @@ export function AdminDashboard() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(`/practice/${provider.id}`, '_blank')}
-                  >
-                    <Eye className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
                     onClick={() => deleteProvider(provider.id)}
                     className="text-red-600 hover:text-red-700"
                   >
@@ -574,7 +564,7 @@ export function AdminDashboard() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <LogoIcon />
+              <div className="text-xl font-bold text-slate-900">DentiStar Admin</div>
               <div className="flex items-center space-x-2">
                 <Shield className="h-5 w-5 text-slate-600" />
                 <span className="font-semibold text-slate-900">Admin Panel</span>

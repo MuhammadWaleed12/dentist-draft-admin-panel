@@ -4,7 +4,7 @@ import { createBrowserClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY // ✅ ADD THIS TO YOUR .env.local
+const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 
 if (!supabaseUrl) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL')
@@ -14,12 +14,12 @@ if (!supabaseAnonKey) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY')
 }
 
-// ✅ Client-side Supabase client (for use in components and client-side code)
+// Client-side Supabase client
 export const createSupabaseClient = () => {
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
 
-// ✅ NEW: Server-side Supabase client (for API routes with RLS)
+// Server-side Supabase client
 export const createServerSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
@@ -29,11 +29,10 @@ export const createServerSupabaseClient = () => {
   })
 }
 
-// ✅ NEW: Admin Supabase client (bypasses RLS using service role)
+// Admin Supabase client (bypasses RLS using service role)
 export const createAdminSupabaseClient = () => {
   if (!supabaseServiceRoleKey) {
     console.warn('⚠️ SUPABASE_SERVICE_ROLE_KEY not found, falling back to anon key');
-    // Fallback to anon key if service role key is not available
     return createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
@@ -50,9 +49,6 @@ export const createAdminSupabaseClient = () => {
   })
 }
 
-// Legacy client for backward compatibility
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
 type Json = 
   | string 
   | number 
@@ -61,7 +57,6 @@ type Json =
   | { [key: string]: Json } 
   | Json[]
 
-// ✅ UPDATED Database types with zip_code
 export interface Database {
   public: {
     Tables: {
@@ -81,10 +76,10 @@ export interface Database {
           photos: string[]
           opening_hours: Json | null
           business_status: string
-          place_id: string | null        // ✅ Keep for backward compatibility
+          place_id: string | null
           user_id: string | null
           email: string | null
-          zip_code: string | null        // ✅ NEW: ZIP code column
+          zip_code: string | null
           created_at: string
           updated_at: string
           last_verified: string
@@ -107,10 +102,10 @@ export interface Database {
           place_id?: string | null
           user_id?: string | null
           email?: string | null
-          zip_code?: string | null       // ✅ NEW: Optional ZIP code for insert
+          zip_code?: string | null
           last_verified?: string
-          created_at?: string            // ✅ Made optional for auto-generation
-          updated_at?: string            // ✅ Made optional for auto-generation
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -130,7 +125,7 @@ export interface Database {
           place_id?: string | null
           user_id?: string | null
           email?: string | null
-          zip_code?: string | null       // ✅ NEW: ZIP code for updates
+          zip_code?: string | null
           last_verified?: string
           updated_at?: string
         }
@@ -171,36 +166,6 @@ export interface Database {
           updated_at?: string
         }
       }
-      locations: {
-        Row: {
-          id: string
-          city: string
-          state: string
-          country: string
-          lat: number
-          lng: number
-          last_searched: string
-          provider_count: number
-          created_at: string
-        }
-        Insert: {
-          city: string
-          state: string
-          country?: string
-          lat: number
-          lng: number
-          provider_count?: number
-        }
-        Update: {
-          city?: string
-          state?: string
-          country?: string
-          lat?: number
-          lng?: number
-          last_searched?: string
-          provider_count?: number
-        }
-      }
       profiles: {
         Row: {
           id: string
@@ -208,6 +173,7 @@ export interface Database {
           full_name: string | null
           avatar_url: string | null
           phone: string | null
+          email: string | null
           role: 'user' | 'admin' | 'provider'
           is_verified: boolean
           created_at: string
@@ -218,6 +184,7 @@ export interface Database {
           full_name?: string | null
           avatar_url?: string | null
           phone?: string | null
+          email?: string | null
           role?: 'user' | 'admin' | 'provider'
           is_verified?: boolean
         }
@@ -225,51 +192,11 @@ export interface Database {
           full_name?: string | null
           avatar_url?: string | null
           phone?: string | null
+          email?: string | null
           role?: 'user' | 'admin' | 'provider'
           is_verified?: boolean
           updated_at?: string
         }
-      }
-      people: {
-        Row: {
-          id: string
-          provider_id: string | null     // FK → providers.id
-          avatar: string | null
-          name: string
-          email: string | null
-          address: string | null
-          biography: string | null
-          dentistry_types: string[] | null
-          degree: string | null
-          created_at: string
-          updated_at: string
-       }
-        Insert: {
-           id:string
-           provider_id?: string | null
-           avatar?: string | null
-           name: string
-           email?: string | null
-           address?: string | null
-           biography?: string | null
-           dentistry_types?: string[] | null
-           degree?: string | null
-           created_at?: string
-           updated_at?: string
-        }
-        Update: {
-           id?: string
-           provider_id?: string | null
-           avatar?: string | null
-           name?: string
-           email?: string | null
-           address?: string | null
-           biography?: string | null
-           dentistry_types?: string[] | null
-           degree?: string | null
-           created_at?: string
-           updated_at?: string
-         }
       }
     }
   }

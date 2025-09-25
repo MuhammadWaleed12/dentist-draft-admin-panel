@@ -12,8 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, Shield } from "lucide-react";
-import Link from "next/link";
-import LogoIcon from "@/assets/Icons/LogoIcon";
 import { toast } from "sonner";
 import { createSupabaseClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -86,9 +84,7 @@ export function AdminLoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center space-x-2">
-            <LogoIcon fill="white" />
-          </Link>
+          <div className="text-white text-2xl font-bold">DentiStar Admin</div>
         </div>
 
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur">
@@ -174,15 +170,6 @@ export function AdminLoginPage() {
             </div>
           </CardContent>
         </Card>
-
-        <div className="text-center mt-6">
-          <Link 
-            href="/" 
-            className="text-sm text-white/70 hover:text-white transition-colors"
-          >
-            ← Back to main site
-          </Link>
-        </div>
 
         <div className="text-center mt-8 text-sm text-white/50">
           <p>

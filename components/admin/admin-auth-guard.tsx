@@ -6,7 +6,6 @@ import { createSupabaseClient } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Shield } from "lucide-react";
-import LogoIcon from "@/assets/Icons/LogoIcon";
 
 interface AdminAuthGuardProps {
   children: React.ReactNode;
@@ -79,7 +78,7 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <LogoIcon fill="white" />
+            <div className="text-white text-2xl font-bold">DentiStar Admin</div>
           </div>
 
           <Card className="shadow-xl border-0">
@@ -115,13 +114,6 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
                   onClick={() => router.push("/admin/login")}
                 >
                   Back to Login
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => router.push("/")}
-                >
-                  Go to Main Site
                 </Button>
               </div>
             </CardContent>
