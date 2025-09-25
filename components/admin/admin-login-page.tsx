@@ -31,6 +31,11 @@ export function AdminLoginPage() {
       return;
     }
 
+    if (!email.includes('@')) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -41,6 +46,7 @@ export function AdminLoginPage() {
       });
 
       if (error) {
+        console.error("Login error:", error);
         throw error;
       }
 
@@ -53,9 +59,10 @@ export function AdminLoginPage() {
         .from('profiles')
         .select('role, is_verified')
         .eq('user_id', data.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError || !profile) {
+        console.error("Profile error:", profileError);
         throw new Error("User profile not found");
       }
 

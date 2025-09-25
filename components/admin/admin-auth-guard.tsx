@@ -33,9 +33,10 @@ export function AdminAuthGuard({ children }: AdminAuthGuardProps) {
           .from('profiles')
           .select('role, is_verified')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError || !profile) {
+          console.error("Profile error:", profileError);
           setError("User profile not found");
           return;
         }
